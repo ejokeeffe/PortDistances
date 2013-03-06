@@ -1,2 +1,16 @@
 # config Files #
-*.config
+config.properties
+
+#java files #
+.classpath
+.project
+.settings
+
+# gephi files #
+*.gexf
+
+# testScripts folder #
+testScripts
+
+# matlab process files #
+*.asv
