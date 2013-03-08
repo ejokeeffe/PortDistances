@@ -13,10 +13,10 @@
 %> @todo Add around the world connections
 %> @todo add code to add suez and panama links
 %function generateGridForGephi()
-edgesTable = 'sp_edges_2deg_incl_suez';
-nodesTable = 'sp_nodes_2deg_incl_suez';
+edgesTable = 'sp_edges_1deg_incl_suez';
+nodesTable = 'sp_nodes_1deg_incl_suez';
 shapeFile = '../../../Data/Routing/TemplatesShapesForPortDistance/WinterExtent2013_inclCanals_smooth.shp';
-nodeSpacing = 2; %in degrees
+nodeSpacing = 1.5; %in degrees
 % addSuez = 1;
 
 %generate the grid
