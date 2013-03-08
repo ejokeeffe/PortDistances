@@ -58,7 +58,7 @@ public class getDistances {
 		//get the baseline grid
 		builder.setDbUser(dbUser);
 		builder.setDbPass(dbPass);
-		builder.buildBaseGrid("sp_nodes_2deg_incl_suez","sp_edges_2deg_incl_suez");
+		builder.buildBaseGrid("sp_nodes_2deg","sp_edges_2deg");
 		
 		//Now add the new ports to the grid
 		builder.addPortsToGrid(ports);
@@ -73,8 +73,8 @@ public class getDistances {
 		Map<MultiKey,Double> distances = builder.getPortToPortDistances(ports);
 		
 		//Now write these to the database
-		builder.writeDistancesToDB(Boolean.TRUE,"Gephi", "SuezDistances_res_" + resolution + "_" + dateFormat.format(cal.getTime()),
-				"SuezDistancesPorts_res_" + resolution + "_" + dateFormat.format(cal.getTime()));
+		builder.writeDistancesToDB(Boolean.TRUE,"Gephi", "CapeDistances_res_" + resolution + "_" + dateFormat.format(cal.getTime()),
+				"CapeDistancesPorts_res_" + resolution + "_" + dateFormat.format(cal.getTime()));
 		
 		
 		System.out.println("Done!");
