@@ -17,13 +17,19 @@ import eok.generics.Pair;
 import eok.location.Country;
 import eok.location.CountryFactory;
 import eok.location.Port;
+import eok.location.PortFactory;
 
 public class getDistances {
 	
 	//Map<Pair<Port,Port>,Double> distances;
 	
 	public static void main(String[] args) {
-		int resolution = 2;
+		getDistances.getJBPortDistances();
+		
+	}//main
+	
+	public static void getRepPortDistances(){
+int resolution = 1;
 		
 		BuildPortDistances builder = new BuildPortDistances();
 		// Get the db details from the properties file
@@ -58,7 +64,7 @@ public class getDistances {
 		//get the baseline grid
 		builder.setDbUser(dbUser);
 		builder.setDbPass(dbPass);
-		builder.buildBaseGrid("sp_nodes_2deg_incl_suez","sp_edges_2deg_incl_suez");
+		builder.buildBaseGrid("sp_nodes_1deg_incl_suez","sp_edges_1deg_incl_suez");
 		
 		//Now add the new ports to the grid
 		builder.addPortsToGrid(ports);
@@ -78,6 +84,51 @@ public class getDistances {
 		
 		
 		System.out.println("Done!");
-		
-	}//main
+	}
+public static void getJBPortDistances(){
+	int resolution = 1;
+	
+	BuildPortDistances builder = new BuildPortDistances();
+	// Get the db details from the properties file
+	//load a properties file
+	Properties prop = new Properties();
+	try {
+		prop.load(new FileInputStream("config.properties"));
+	} catch (FileNotFoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	//get all countries
+	String dbUser = prop.getProperty("dbuser");
+	String dbPass = prop.getProperty("dbpassword");
+	ArrayList<Port> ports = PortFactory.getJBPorts(dbUser, dbPass);
+	
+	//get the baseline grid
+	builder.setDbUser(dbUser);
+	builder.setDbPass(dbPass);
+	builder.buildBaseGrid("sp_nodes_1deg_incl_suez","sp_edges_1deg_incl_suez");
+	
+	//Now add the new ports to the grid
+	ArrayList<Port> slimmedPorts = new ArrayList<Port>(ports.subList(0, 300));
+	builder.addPortsToGrid(slimmedPorts);
+	
+	DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");
+	Calendar cal = Calendar.getInstance();
+	
+	//output to gexf file
+	builder.writeGraphToGephi("shortest_path_suez_res" + resolution + "_" + dateFormat.format(cal.getTime()) + ".gexf");
+	
+	//get the port to port distances
+	Map<MultiKey,Double> distances = builder.getPortToPortDistances(slimmedPorts);
+	
+	//Now write these to the database
+	builder.writeDistancesToDB(Boolean.TRUE,"Gephi", "JBSuezDistances_res_" + resolution + "_" + dateFormat.format(cal.getTime()),
+			"JBSuezDistancesPorts_res_" + resolution + "_" + dateFormat.format(cal.getTime()));
+	
+	
+	System.out.println("Done!");
+}
 }

@@ -16,7 +16,8 @@
 edgesTable = 'sp_edges_1deg_incl_suez';
 nodesTable = 'sp_nodes_1deg_incl_suez';
 shapeFile = '../../../Data/Routing/TemplatesShapesForPortDistance/WinterExtent2013_inclCanals_smooth.shp';
-nodeSpacing = 1.5; %in degrees
+lonSpacing = 2; %in degrees
+latSpacing = 1.5; %in degrees
 % addSuez = 1;
 
 %generate the grid
@@ -25,7 +26,8 @@ boundingCoords = [-180 -90;180 90];
 landareas = shaperead(shapeFile);
 % figure
 % mapshow(landareas);
-nodes = gridGen.generateGrid(boundingCoords(:,1),boundingCoords(:,2),deg2km(nodeSpacing));
+nodes = gridGen.generateGrid(boundingCoords(:,1),boundingCoords(:,2),...
+    deg2km(lonSpacing),deg2km(latSpacing));
 % if addSuez==1
 %     %Do this by adding A node for Port Suez (29.9503 N, 32.5569E) to
 %     %Port Said (31.2533N, 32.3094E), and joining these nodes to their
@@ -35,6 +37,7 @@ nodes = gridGen.generateGrid(boundingCoords(:,1),boundingCoords(:,2),deg2km(node
 %     %Now add these to nodes
 %     nodes = [nodes;suezNode;saidNode];
 % end %if
+[nodes,~] = gridGen.removePoints(nodes,[],landareas,1);
 [~,nodes,adjList] = gridGen.generateEdges(nodes);
 % if addSuez ==1
 %     %Make sure suez and said are connected
@@ -44,10 +47,11 @@ nodes = gridGen.generateGrid(boundingCoords(:,1),boundingCoords(:,2),deg2km(node
 %     adjList(end-1,end) = Useful.GreatCircleDistance(nodes(end,2),nodes(end,3),...
 %         nodes(end-1,2),nodes(end-1,3));
 % end %if
-[nodes,adjList] = gridGen.removePoints(nodes(:,2:3),adjList,landareas,1);
-nodes = [[1:size(nodes,1)]',nodes];
+
+%nodes = [[1:size(nodes,1)]',nodes];
 %[segments] = gridGen.removeLines(segments,nodes,-1,-1,landareas);
-[~,adjDist] = gridGen.getDistances(nodes,adjList); 
+%[~,adjDist] = gridGen.getDistances(nodes,adjList); 
+adjDist = adjList;
     %add index of nodes to nodes
 
 adjDist = adjDist(:);
@@ -68,7 +72,8 @@ db.runBlockInserts(fields,nodesTable,vals,1000);
 fields = [{'source'};{'target'};{'weight'}];
 assignments = GenProb.IndexToAssignment(nodeConnections(adjList~=0,:),[length(nodes) ...
     length(nodes)]);
-vals = num2cell(full([assignments adjDist(adjDist~=0,:)]));
+vals = num2cell(full([assignments adjList(adjList~=0,:)]));
 db.runBlockInserts(fields,edgesTable,vals,3000);
 
 
+disp('Done');

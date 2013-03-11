@@ -15,12 +15,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import org.apache.commons.collections.keyvalue.MultiKey;
 
 import org.gephi.data.attributes.api.AttributeController;
 import org.gephi.data.attributes.api.AttributeModel;
+import org.gephi.graph.api.DirectedGraph;
 import org.gephi.graph.api.Edge;
 import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.Node;
@@ -101,7 +103,7 @@ public class BuildPortDistances {
         ImporterEdgeList edgeListImporter = new ImporterEdgeList();
         Container container = importController.importDatabase(db, edgeListImporter);
         container.setAllowAutoNode(false);      //Don't create missing nodes
-        container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED);   //Force unDirected
+        container.getLoader().setEdgeDefault(EdgeDefault.DIRECTED);   //Force unDirected
         
       //Append imported data to GraphAPI
         importController.process(container, new DefaultProcessor(), workspace);
@@ -117,15 +119,15 @@ public class BuildPortDistances {
 	 * 
 	 * Great circle distance: 
 	 *  
-	 * @param ports The list of ports for which we are getting distances for
+	 * @param list The list of ports for which we are getting distances for
 	 * 
 	 */
-	public void addPortsToGrid(ArrayList<Port> ports){
+	public void addPortsToGrid(ArrayList<Port> list){
 		//need to instantiate a few variables
-		nodeLocations = new DenseDoubleMatrix2D(graphModel.getDirectedGraph().getNodeCount(),2);
+		nodeLocations = new DenseDoubleMatrix2D(graphModel.getUndirectedGraph().getNodeCount(),2);
 		nodeLocationsMap = new HashMap<MultiKey,Node>();
 		this.portNodes = new HashMap<Port,Node>();
-		this.p_list=ports;
+		this.p_list=(ArrayList<Port>) list;
 		//Loop through - first id is 1
 		for(int i=1;i<=graphModel.getUndirectedGraph().getNodeCount();i++){
 			
@@ -140,10 +142,10 @@ public class BuildPortDistances {
 		}//for 
 		//Loop through the ports,adding each in turn
 		
-		for(int i=0;i<ports.size();i++){
-			System.out.println("Getting nearest node to port " + i + " of " + (ports.size()-1));
+		for(int i=0;i<list.size();i++){
+			System.out.println("Getting nearest node to port " + i + " of " + (list.size()-1));
 			
-			Port p = ports.get(i);
+			Port p = list.get(i);
 			
 			//Create the node
 			Node n0 = graphModel.factory().newNode("port_" + i);
@@ -204,7 +206,8 @@ public class BuildPortDistances {
 			//get the source node
 			Node source = portNodes.get(p);
 						
-			DijkstraShortestPathAlgorithm distAlgo = new DijkstraShortestPathAlgorithm(graphModel.getUndirectedGraph(), source);
+			DijkstraShortestPathAlgorithm distAlgo = new DijkstraShortestPathAlgorithm(graphModel.getDirectedGraph(), source);
+			//WeightedDijkstra distAlgo = new WeightedDijkstra(graphModel.getUndirectedGraph(), source);
 			distAlgo.compute();
 			HashMap<NodeData,Double> dists = distAlgo.getDistances();
 
@@ -289,11 +292,17 @@ public class BuildPortDistances {
 			//add the y
 			row.add(port.getLat());
 			//add the country code
-			row.add(port.getParentCountry().getUncode());
-			//add the country code
-			row.add(port.getParentCountry().getName());
-			//add the locode
-			row.add(port.getISO());
+			if (port.getParentCountry()!=null){
+				row.add(port.getParentCountry().getUncode());
+				//add the country code
+				row.add(port.getParentCountry().getName());
+				//add the locode
+				row.add(port.getISO());
+			}else{
+				row.add(-1);
+				row.add("");
+				row.add("");
+			}
 			
 			//Add to the arraylist
 			vals.add(row);
